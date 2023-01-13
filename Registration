@@ -1,0 +1,83 @@
+import qrcode
+import os
+import cv2
+from PIL import Image
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+print("Enter you name")
+FirstName = input("Firstname: ")
+MiddleName = input("Middle Name: ")
+MiddleInitial = ''
+MiddleInitial += (MiddleName[0].upper()+'.')
+LastName = input("Lastname: ")
+Name = (f'{FirstName} {MiddleInitial} {LastName}')
+Password = input("Enter Password: ")
+GuardianNumber = input("Enter Guardian's Number: ")
+
+newpath = f'{dir_path}/Enrollees'
+path = f'{newpath}/{LastName}'
+if not os.path.exists(newpath):
+    os.makedirs(newpath)
+
+def GENERATEQR():
+    textFilePath = (f'{path}.txt')
+    with open(textFilePath, 'w') as f:
+        f.write(f'Name: {Name}\n')
+        f.write(f'Password: {Password}\n')
+        f.write(f"Guardian's Number: {GuardianNumber}\n")
+
+    with open(f'{path}.txt') as A:
+        data = A.read()
+    img = qrcode.make(data)
+    img.save(f'{path}qr.png')
+
+def CAPTUREPROFILEPIC():
+    vid = cv2.VideoCapture(0)
+    while True:
+        ret, image = vid.read()
+        cv2.imshow('Press space to capture', image)
+        if cv2.waitKey(1) & 0xFF == ord(' '):
+            break
+        cv2.imwrite(f"{path}pf.png", image)
+    vid.release()
+    cv2.destroyAllWindows()
+
+def COMBINE0QR0PROFPIC():
+    img1 = Image.open(f'{path}qr.png')
+    img2 = Image.open(f"{path}pf.png")
+    if img1.height >= img2.height:
+        length = img1.height
+    else:
+        length = img2.height
+    image = Image.new('RGB', (img1.width+img2.width, length))
+    image.paste(img1, (0,0))
+    image.paste(img2, (img1.width,0))
+    image.save(f'{path}.png')
+    os.remove(f'{path}qr.png')
+    os.remove(f'{path}pf.png')
+    os.remove(f'{path}.txt')
+
+def QRFORPIC():
+    textFilePath = (f'{path}only.txt')
+    with open(textFilePath, 'w') as f:
+        f.write(f'{LastName}')
+    with open(f'{path}only.txt') as B:
+        data = B.read()
+    img = qrcode.make(data)
+    img.save(f'{path}only.png')
+    image = cv2.imread(f'{path}only.png')
+    while True:
+        cv2.imshow('Take a picture of your qrcode', image)
+        if cv2.waitKey(1) & 0xFF == ord(' '):
+            break
+    cv2.destroyAllWindows()
+    os.remove(f'{path}only.txt')
+    os.remove(f'{path}only.png')
+
+
+
+
+GENERATEQR()
+CAPTUREPROFILEPIC()
+COMBINE0QR0PROFPIC()
+QRFORPIC()
