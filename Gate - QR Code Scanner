@@ -43,14 +43,16 @@ def VALIDATEPASSWORD():
         if tries == 0:
             Inputpass = input("Enter your password: ")
             tries = tries + 1
-        if tries > 0 and tries < 3:
+        elif tries > 0 and tries < 3:
             Inputpass = input(f"Please try again ({3-tries} try/tries left)\nEnter your password: ")
             tries = tries + 1
-        if tries == 3 and Inputpass != Pass:
+        elif tries == 3 and Inputpass != Pass:
             print("Sorry, you can't pass")
             exit()
-        if Inputpass == Pass:
-            return "Password Verification Success"
+    return "Password Verification Successful"
+
+def VALIDATEFACE():
+    print ("hehe")
 
 LastName = READQRFORNAME()
 if LastName == "No code detected":
