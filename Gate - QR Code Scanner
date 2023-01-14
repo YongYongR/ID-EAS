@@ -5,17 +5,58 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 def READQRFORNAME():
     cap = cv2.VideoCapture(0)
     detector = cv2.QRCodeDetector()
-    while True:
-        _, img = cap.read()
-        data, bbox, _ = detector.detectAndDecode(img)
-        if data:
-            a=data
-            break
-        cv2.imshow("QRCODEscanner", img)    
-        if cv2.waitKey(1) == ord("q"):
-            break
-    cap.release()
-    cv2.destroyAllWindows()
-    return a
+    try:
+        while True:
+            _, img = cap.read()
+            data, bbox, _ = detector.detectAndDecode(img)
+            if data:
+                a=data
+                return a
+            cv2.imshow("Please show your qrcode (Press space to cancel)", img)
+            if cv2.waitKey(1) == ord(" "):
+                return ('No code detected')
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
+
+def QRTOTEXT():
+    img = cv2.imread(mainfiledirectory)
+    qr_det = cv2.QRCodeDetector()
+    Data, BBOX, Straight_QRcode = qr_det.detectAndDecode(img)
+    return Data
+
+def VALIDATEPASSWORD():
+    Pass = ''
+    alt = textfile.split()
+    for i in alt:
+        if i == "Password:":
+            alt = alt[alt.index(i)+1:]
+    for i in alt:
+        if i == "Guardian's" and alt[alt.index(i)+1] == "Number:":
+            alt = alt[:alt.index(i)]
+    for i in alt:
+        Pass += f'{i} '
+    Pass = Pass[:-1]
+    Inputpass = ''
+    tries = 0
+    while Inputpass != Pass:
+        if tries == 0:
+            Inputpass = input("Enter your password: ")
+            tries = tries + 1
+        if tries > 0 and tries < 3:
+            Inputpass = input(f"Please try again ({3-tries} try/tries left)\nEnter your password: ")
+            tries = tries + 1
+        if tries == 3 and Inputpass != Pass:
+            print("Sorry, you can't pass")
+            exit()
+        if Inputpass == Pass:
+            return "Password Verification Success"
 
 LastName = READQRFORNAME()
+if LastName == "No code detected":
+    print ("Verification unsuccessful")
+    exit()
+mainfiledirectory = f'{dir_path}/Enrollees/{LastName}.png'
+textfile = QRTOTEXT()
+Validation = VALIDATEPASSWORD()
+print(Validation)
