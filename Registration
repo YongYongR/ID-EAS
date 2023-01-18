@@ -2,22 +2,41 @@ import qrcode
 import os
 import cv2
 from PIL import Image
+import speech_recognition as sr
+import pwinput
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-print("Enter you name")
-FirstName = input("Firstname: ")
-MiddleName = input("Middle Name: ")
-MiddleInitial = ''
-MiddleInitial += (MiddleName[0].upper()+'.')
-LastName = input("Lastname: ")
-Name = (f'{FirstName} {MiddleInitial} {LastName}')
-Password = input("Enter Password: ")
-GuardianNumber = input("Enter Guardian's Number: ")
+def PASSWORDGET2():
+    pass1 = '2'
+    pass2 = '1'
+    while pass1 != pass2:
+            pass1 = pwinput.pwinput('Enter your Password: ')
+            pass2 = pwinput.pwinput('Enter again to verify: ')
+            if pass1 != pass2:
+                print("Please try again")
+    return pass1
 
-newpath = f'{dir_path}/Enrollees'
-path = f'{newpath}/{LastName}'
-if not os.path.exists(newpath):
-    os.makedirs(newpath)
+def PASSWORDGET():
+    recognizer = sr.Recognizer()
+    pass1 = '2'
+    pass2 = '1'
+    finalpass = ''
+    while pass1 != pass2:
+        with sr.Microphone() as mic:
+            print('Talk to the mic and say your password')
+            recognizer.adjust_for_ambient_noise(mic, duration=0.2)
+            audio = recognizer.listen(mic)
+            text = recognizer.recognize_google(audio)
+            pass1 = text.lower()
+            print('Say it again to verify')
+            recognizer.adjust_for_ambient_noise(mic, duration=0.2)
+            audio = recognizer.listen(mic)
+            text = recognizer.recognize_google(audio)
+            pass2 = text.lower()
+            if pass1 != pass2:
+                print("Please try again")
+    finalpass += pass1
+    return finalpass
 
 def GENERATEQR():
     textFilePath = (f'{path}.txt')
@@ -67,15 +86,27 @@ def QRFORPIC():
     img.save(f'{path}only.png')
     image = cv2.imread(f'{path}only.png')
     while True:
-        cv2.imshow('Take a picture of your qrcode', image)
+        cv2.imshow('Take a picture of your qrcode (Press space to exit)', image)
         if cv2.waitKey(1) & 0xFF == ord(' '):
             break
     cv2.destroyAllWindows()
     os.remove(f'{path}only.txt')
     os.remove(f'{path}only.png')
 
+print("Enter you name")
+FirstName = input("Firstname: ")
+MiddleName = input("Middle Name: ")
+MiddleInitial = ''
+MiddleInitial += (MiddleName[0].upper()+'.')
+LastName = input("Lastname: ")
+Name = (f'{FirstName} {MiddleInitial} {LastName}')
+Password = PASSWORDGET2() #PASSWORDGET() is an alternate
+GuardianNumber = input("Enter Guardian's Number: ")
 
-
+newpath = f'{dir_path}/Enrollees'
+path = f'{newpath}/{LastName}'
+if not os.path.exists(newpath):
+    os.makedirs(newpath)
 
 GENERATEQR()
 CAPTUREPROFILEPIC()
