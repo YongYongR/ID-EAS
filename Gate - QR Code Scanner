@@ -1,5 +1,9 @@
 import cv2
 import os
+import face_recognition
+import numpy as np
+import speech_recognition as sr
+import pwinput
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def READQRFORNAME():
@@ -10,11 +14,11 @@ def READQRFORNAME():
             _, img = cap.read()
             data, bbox, _ = detector.detectAndDecode(img)
             if data:
-                a=data
-                return a
+                return data
             cv2.imshow("Please show your qrcode (Press space to cancel)", img)
             if cv2.waitKey(1) == ord(" "):
-                return ('No code detected')
+                print ("Verification unsuccessful")
+                exit()
     finally:
         cap.release()
         cv2.destroyAllWindows()
@@ -25,7 +29,7 @@ def QRTOTEXT():
     Data, BBOX, Straight_QRcode = qr_det.detectAndDecode(img)
     return Data
 
-def VALIDATEPASSWORD():
+def VALIDATEPASSWORD2():
     Pass = ''
     alt = textfile.split()
     for i in alt:
@@ -41,24 +45,92 @@ def VALIDATEPASSWORD():
     tries = 0
     while Inputpass != Pass:
         if tries == 0:
-            Inputpass = input("Enter your password: ")
+            Inputpass = pwinput.pwinput("Enter your password for verification: ")
             tries = tries + 1
         elif tries > 0 and tries < 3:
-            Inputpass = input(f"Please try again ({3-tries} try/tries left)\nEnter your password: ")
+            Inputpass = pwinput.pwinput(f"Please try again ({3-tries} try/tries left)\nEnter your password: ")
             tries = tries + 1
         elif tries == 3 and Inputpass != Pass:
-            print("Sorry, you can't pass")
+            print("Password Verification Unsuccessful. You cannot pass")
+            exit()
+    return "Password Verification Successful"
+
+def VALIDATEPASSWORD():
+    Pass = ''
+    alt = textfile.split()
+    for i in alt:
+        if i == "Password:":
+            alt = alt[alt.index(i)+1:]
+    for i in alt:
+        if i == "Guardian's" and alt[alt.index(i)+1] == "Number:":
+            alt = alt[:alt.index(i)]
+    for i in alt:
+        Pass += f'{i} '
+    Pass = Pass[:-1]
+    Inputpass = ''
+    tries = 0
+    recognizer = sr.Recognizer()
+    while Inputpass != Pass:
+        if tries == 0:
+            with sr.Microphone() as mic:
+                print('Talk to the microphone and say your password')
+                recognizer.adjust_for_ambient_noise(mic, duration=0.2)
+                audio = recognizer.listen(mic)
+                text = recognizer.recognize_google(audio)
+                Inputpass = text.lower()
+                tries = tries + 1
+        elif tries > 0 and tries < 3:
+            with sr.Microphone() as mic:
+                print(f"Please try again ({3-tries} try/tries left)\nTalk to the microphone and say your password")
+                recognizer.adjust_for_ambient_noise(mic, duration=0.2)
+                audio = recognizer.listen(mic)
+                text = recognizer.recognize_google(audio)
+                Inputpass = text.lower()
+            tries = tries + 1
+        elif tries == 3 and Inputpass != Pass:
+            print("Password Verification Unsuccessful. You cannot pass")
             exit()
     return "Password Verification Successful"
 
 def VALIDATEFACE():
-    print ("hehe")
+    img1 = cv2.imread(mainfiledirectory)
+    locface = face_recognition.face_locations(img1)
+    encodeface1 = face_recognition.face_encodings(img1, locface)
+
+    cap = cv2.VideoCapture(0)
+    setter = []
+    print('Show your face to the camera for verification')
+    while True:
+        _, img = cap.read()
+        imgS = cv2.resize(img, (0,0), None, 0.25, 0.25)
+        imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
+        faceCurFrame2 = face_recognition.face_locations(imgS)
+        encodeCurFrame2 = face_recognition.face_encodings(imgS, faceCurFrame2)
+        for encodeFace, faceloc in zip(encodeCurFrame2, faceCurFrame2):
+            matches = face_recognition.compare_faces(encodeface1, encodeFace)
+            facedis = face_recognition.face_distance(encodeface1, encodeFace)
+            matchIndex = np.argmin(facedis)
+            if matches[matchIndex]:
+                setter.append('True')
+            else:
+                setter.append('False')
+            if len(setter) == 7:
+                true = setter.count('True')
+                false = setter.count('False')
+                if true > false:
+                    print('Face Verification Successful.')
+                    exit()
+                if true < false:
+                    print ('Face Verification Unsuccessful. You cannot pass')
+                    exit()
+        cv2.imshow('Please show your face to the camera', img)
+        if cv2.waitKey(1) == ord(" "):
+            print('Face Verification Unsuccessful. You cannot pass')
+            exit()
 
 LastName = READQRFORNAME()
-if LastName == "No code detected":
-    print ("Verification unsuccessful")
-    exit()
 mainfiledirectory = f'{dir_path}/Enrollees/{LastName}.png'
 textfile = QRTOTEXT()
-Validation = VALIDATEPASSWORD()
+Validation = VALIDATEPASSWORD2()
 print(Validation)
+VALIDATEFACE()
