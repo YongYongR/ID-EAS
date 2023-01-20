@@ -131,6 +131,7 @@ def VALIDATEFACE():
 LastName = READQRFORNAME()
 mainfiledirectory = f'{dir_path}/Enrollees/{LastName}.png'
 textfile = QRTOTEXT()
-Validation = VALIDATEPASSWORD2()
+Validation = VALIDATEPASSWORD2() 
+# Validation = VALIDATEPASSWORD2() is an alternate
 print(Validation)
 VALIDATEFACE()
