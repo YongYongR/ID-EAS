@@ -4,6 +4,7 @@ import cv2
 from PIL import Image
 import speech_recognition as sr
 import pwinput
+import face_recognition
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def PASSWORDGET2():
@@ -41,10 +42,9 @@ def PASSWORDGET():
 def GENERATEQR():
     textFilePath = (f'{path}.txt')
     with open(textFilePath, 'w') as f:
-        f.write(f'Name: {Name}\n')
+        f.write(f'Name: {FullName}\n')
         f.write(f'Password: {Password}\n')
         f.write(f"Guardian's Number: {GuardianNumber}\n")
-
     with open(f'{path}.txt') as A:
         data = A.read()
     img = qrcode.make(data)
@@ -56,8 +56,13 @@ def CAPTUREPROFILEPIC():
         ret, image = vid.read()
         cv2.imshow('Press space to capture', image)
         if cv2.waitKey(1) & 0xFF == ord(' '):
-            break
-        cv2.imwrite(f"{path}pf.png", image)
+            locface = face_recognition.face_encodings(image)
+            if locface == []:
+                print('No face detected. Please try again')
+                continue
+            else:
+                cv2.imwrite(f"{path}pf.png", image)
+                break
     vid.release()
     cv2.destroyAllWindows()
 
@@ -93,22 +98,66 @@ def QRFORPIC():
     os.remove(f'{path}only.txt')
     os.remove(f'{path}only.png')
 
+def GETFIRSTNAME():
+    fname = ''
+    fnameinput = input("First Name: ")
+    fnameinput = fnameinput.split()
+    for i in fnameinput:
+        fname += f'{i[0].upper()}{i[1:].lower()} '
+    fname = fname[:-1]
+    return fname
+
+def GETMIDNAME():
+    mname = ''
+    midname = input("Middle Name: ")
+    midname = midname.split()
+    for i in midname:
+        mname += f'{i[0].upper()}{i[1:].lower()} '
+    mname = mname[:-1]
+    return mname
+
+def GETMIDINITIAL():
+    minital = f'{MiddleName[0].upper()}.'
+    return minital
+
+def GETLASTNAME():
+    lname = ''
+    lstname = input("Lastname: ")
+    lstname = lstname.split()
+    for i in lstname:
+        lname += f'{i[0].upper()}{i[1:].lower()} '
+    lname = lname[:-1]
+    return lname
+
+def GETGUARDIANNUMBER():
+    while True:
+        gnumber = input("Enter your Guardian's Number: ")
+        if len(gnumber) == 11 and gnumber[:2] == '09':
+            try:
+                int(gnumber)
+                return gnumber
+            except ValueError:
+                print ('Invalid Number. Please try again')
+                continue
+        else:
+            print ('Invalid Number. Please try again')
+
 print("Enter you name")
-FirstName = input("Firstname: ")
-MiddleName = input("Middle Name: ")
-MiddleInitial = ''
-MiddleInitial += (MiddleName[0].upper()+'.')
-LastName = input("Lastname: ")
-Name = (f'{FirstName} {MiddleInitial} {LastName}')
-Password = PASSWORDGET2() #PASSWORDGET() is an alternate
-GuardianNumber = input("Enter Guardian's Number: ")
+FirstName = GETFIRSTNAME()
+MiddleName = GETMIDNAME()
+MiddleInitial = GETMIDINITIAL()
+LastName = GETLASTNAME()
+FullName = (f'{FirstName} {MiddleInitial} {LastName}')
+Password = PASSWORDGET2()
+# Password = PASSWORDGET() #is an alternate
+GuardianNumber = GETGUARDIANNUMBER()
 
 newpath = f'{dir_path}/Enrollees'
 path = f'{newpath}/{LastName}'
 if not os.path.exists(newpath):
     os.makedirs(newpath)
 
-GENERATEQR()
 CAPTUREPROFILEPIC()
+GENERATEQR()
 COMBINE0QR0PROFPIC()
 QRFORPIC()
