@@ -5,6 +5,7 @@ from PIL import Image
 import speech_recognition as sr
 import pwinput
 import face_recognition
+import string
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def PASSWORDGET2():
@@ -14,7 +15,7 @@ def PASSWORDGET2():
             pass1 = pwinput.pwinput('Enter your Password: ')
             pass2 = pwinput.pwinput('Enter again to verify: ')
             if pass1 != pass2:
-                print("Please try again")
+                print("Password did not match. Please try again")
     return pass1
 
 def PASSWORDGET():
@@ -35,7 +36,7 @@ def PASSWORDGET():
             text = recognizer.recognize_google(audio)
             pass2 = text.lower()
             if pass1 != pass2:
-                print("Please try again")
+                print("Password did not match. Please try again")
     finalpass += pass1
     return finalpass
 
@@ -55,7 +56,8 @@ def CAPTUREPROFILEPIC():
     while True:
         ret, image = vid.read()
         cv2.imshow('Press space to capture', image)
-        if cv2.waitKey(1) & 0xFF == ord(' '):
+        wait = cv2.waitKey(1)
+        if wait == ord(' '):
             locface = face_recognition.face_encodings(image)
             if locface == []:
                 print('No face detected. Please try again')
@@ -63,6 +65,11 @@ def CAPTUREPROFILEPIC():
             else:
                 cv2.imwrite(f"{path}pf.png", image)
                 break
+        if wait == 27:
+            vid.release()
+            cv2.destroyAllWindows()
+            print ('Registration Unsuccessful')
+            exit()
     vid.release()
     cv2.destroyAllWindows()
 
@@ -92,24 +99,51 @@ def QRFORPIC():
     image = cv2.imread(f'{path}only.png')
     while True:
         cv2.imshow('Take a picture of your qrcode (Press space to exit)', image)
-        if cv2.waitKey(1) & 0xFF == ord(' '):
+        wait = cv2.waitKey(1)
+        if wait == ord(' ') or wait == 27:
             break
     cv2.destroyAllWindows()
     os.remove(f'{path}only.txt')
     os.remove(f'{path}only.png')
 
 def GETFIRSTNAME():
+    test = '.'
+    test2 = ''
+    listalphabet = list(string.ascii_letters)
+    listalphabet.append(' ')
+    listalphabet.append('-')
+    while test != test2:
+        test = input("First Name: ")
+        for i in test:
+            if i in listalphabet:
+                test2 += i
+        if test != test2:
+            print('Names must not contain numbers and symbols. Try again')
+            test2 = ''
+            continue
     fname = ''
-    fnameinput = input("First Name: ")
-    fnameinput = fnameinput.split()
-    for i in fnameinput:
+    test = test.split()
+    for i in test:
         fname += f'{i[0].upper()}{i[1:].lower()} '
     fname = fname[:-1]
     return fname
 
 def GETMIDNAME():
+    midname = '.'
+    test2 = ''
+    listalphabet = list(string.ascii_letters)
+    listalphabet.append(' ')
+    listalphabet.append('-')
+    while midname != test2:
+        midname = input("Middle Name: ")
+        for i in midname:
+            if i in listalphabet:
+                test2 += i
+        if midname != test2:
+            print('Names must not contain numbers and symbols. Try again')
+            test2 = ''
+            continue
     mname = ''
-    midname = input("Middle Name: ")
     midname = midname.split()
     for i in midname:
         mname += f'{i[0].upper()}{i[1:].lower()} '
@@ -121,8 +155,21 @@ def GETMIDINITIAL():
     return minital
 
 def GETLASTNAME():
+    lstname = '.'
+    test2 = ''
+    listalphabet = list(string.ascii_letters)
+    listalphabet.append(' ')
+    listalphabet.append('-')
+    while lstname != test2:
+        lstname = input("Last Name: ")
+        for i in lstname:
+            if i in listalphabet:
+                test2 += i
+        if lstname != test2:
+            print('Names must not contain numbers and symbols. Try again')
+            test2 = ''
+            continue
     lname = ''
-    lstname = input("Lastname: ")
     lstname = lstname.split()
     for i in lstname:
         lname += f'{i[0].upper()}{i[1:].lower()} '
