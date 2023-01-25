@@ -4,7 +4,16 @@ import face_recognition
 import numpy as np
 import speech_recognition as sr
 import pwinput
+from PIL import Image
+import openpyxl
+from openpyxl import Workbook, load_workbook
+from openpyxl.utils import get_column_letter
+from datetime import datetime
 dir_path = os.path.dirname(os.path.realpath(__file__))
+now = datetime.now()
+date = now.strftime("%m/%d/%Y")
+date2 = now.strftime("%m-%d-%Y")
+time = now.strftime("%H:%M:%S")
 
 def READQRFORNAME():
     cap = cv2.VideoCapture(0)
@@ -13,10 +22,16 @@ def READQRFORNAME():
         while True:
             _, img = cap.read()
             data, bbox, _ = detector.detectAndDecode(img)
-            if data:
-                return data
             cv2.imshow("Please show your qrcode (Press space to cancel)", img)
-            if cv2.waitKey(1) == ord(" "):
+            wait = cv2.waitKey(1)
+            if data:
+                try:
+                    Image.open(f'{dir_path}/Enrollees/{data}.png')
+                    return data
+                except FileNotFoundError:
+                    print('Invalid QR')
+                    continue
+            if wait == ord(" ") or wait == 27:
                 print ("Verification unsuccessful")
                 exit()
     finally:
@@ -53,7 +68,8 @@ def VALIDATEPASSWORD2():
         elif tries == 3 and Inputpass != Pass:
             print("Password Verification Unsuccessful. You cannot pass")
             exit()
-    return "Password Verification Successful"
+    print ("Password Verification Successful")
+    return
 
 def VALIDATEPASSWORD():
     Pass = ''
@@ -90,7 +106,8 @@ def VALIDATEPASSWORD():
         elif tries == 3 and Inputpass != Pass:
             print("Password Verification Unsuccessful. You cannot pass")
             exit()
-    return "Password Verification Successful"
+    print ("Password Verification Successful")
+    return
 
 def VALIDATEFACE():
     img1 = cv2.imread(mainfiledirectory)
@@ -119,19 +136,79 @@ def VALIDATEFACE():
                 false = setter.count('False')
                 if true > false:
                     print('Face Verification Successful.')
-                    exit()
+                    return
                 if true < false:
                     print ('Face Verification Unsuccessful. You cannot pass')
                     exit()
         cv2.imshow('Please show your face to the camera', img)
-        if cv2.waitKey(1) == ord(" "):
+        wait = cv2.waitKey(1)
+        if wait == ord(" ") or wait == 27:
             print('Face Verification Unsuccessful. You cannot pass')
             exit()
+
+def GETFULLNAME():
+    Name = ''
+    alt = textfile.split()
+    for i in alt:
+        if i == "Name:":
+            alt = alt[alt.index(i)+1:]
+    for i in alt:
+        if i == "Password:":
+            alt = alt[:alt.index(i)]
+    for i in alt:
+        Name += f'{i} '
+    Name = Name[:-1]
+    return Name
+
+def ATTENDANCECHECKER():
+    path = f'{dir_path}/Enrollees/Attendace'
+    newpath = f'{dir_path}/Enrollees/Attendace/{date2}.xlsx'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    if not os.path.exists(newpath):
+        workbook = Workbook()
+        workbook.save(newpath)
+        wb = load_workbook(newpath)
+        ws = wb.active
+        ws.column_dimensions['A'].width = 30
+        ws.column_dimensions['B'].width = 30
+        ws.column_dimensions['C'].width = 30
+        ws.append(['Name:', 'Date:', 'Time:'])
+        wb.save(newpath)
+    wb = load_workbook(newpath)
+    ws = wb.active
+    first = 1
+    last = 2
+    while True:
+        for row in range(first, last):
+            for col in range(1,4):
+                column = get_column_letter(col)
+                box = ws[column + str(row)]
+                if column == 'A':
+                    if box.value == Fullname:
+                        print('Your attendance is already recorded earlier')
+                        exit()
+                if box.value == None:
+                    return
+        first = first + 1
+        last = last + 1
+
+def LOGATTENDACE():
+    newpath = f'{dir_path}/Enrollees/Attendace/{date2}.xlsx'
+    wb = load_workbook(newpath)
+    ws = wb.active
+    ws.append([Fullname, date, time])
+    wb.save(newpath)
+    return
 
 LastName = READQRFORNAME()
 mainfiledirectory = f'{dir_path}/Enrollees/{LastName}.png'
 textfile = QRTOTEXT()
-Validation = VALIDATEPASSWORD2() 
-# Validation = VALIDATEPASSWORD2() is an alternate
-print(Validation)
+Fullname = GETFULLNAME()
+ATTENDANCECHECKER()
+Validation = VALIDATEPASSWORD2()
+# Validation = VALIDATEPASSWORD() is an alternate
 VALIDATEFACE()
+LOGATTENDACE()
+print('You can pass')
+exit()
